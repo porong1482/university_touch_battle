@@ -930,7 +930,16 @@
 
             if (user.university) {
                 selectedUniversity = user.university;
-                document.getElementById("university-select").value = user.university;
+                const sel = document.getElementById("university-select");
+                sel.value = user.university;
+                const logo = sel.options[sel.selectedIndex]?.getAttribute("data-logo");
+                const imgEl = document.getElementById("uni-logo");
+                const emojiEl = document.getElementById("touch-emoji");
+                if (logo) {
+                    imgEl.src = logo;
+                    imgEl.style.display = "block";
+                    emojiEl.style.display = "none";
+                }
             }
             if (user.items) {
                 const savedIds = user.items.split(",").filter(Boolean);
