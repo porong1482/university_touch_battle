@@ -378,45 +378,6 @@
 
         <select id="university-select">
             <option value="">🎓 대학교 선택</option>
-            <option value="가천대" data-logo="/static/가천대학교.png">가천대</option>
-            <option value="가톨릭대" data-logo="/static/가톨릭대학교.png">가톨릭대</option>
-            <option value="강원대" data-logo="/static/강원대학교.png">강원대</option>
-            <option value="건국대" data-logo="/static/건국대학교.png">건국대</option>
-            <option value="경기대" data-logo="/static/경기대학교.png">경기대</option>
-            <option value="경북대" data-logo="/static/경북대학교.png">경북대</option>
-            <option value="경희대" data-logo="/static/경희대학교.png">경희대</option>
-            <option value="고려대" data-logo="/static/고려대학교.png">고려대</option>
-            <option value="광운대" data-logo="/static/광운대학교.png">광운대</option>
-            <option value="GIST" data-logo="/static/GIST.png">GIST</option>
-            <option value="국민대" data-logo="/static/국민대학교.png">국민대</option>
-            <option value="단국대" data-logo="/static/단국대학교.png">단국대</option>
-            <option value="DGIST" data-logo="/static/DGIST.png">DGIST</option>
-            <option value="명지대" data-logo="/static/명지대학교.png">명지대</option>
-            <option value="부산대" data-logo="/static/부산대학교.png">부산대</option>
-            <option value="상명대" data-logo="/static/상명대학교.png">상명대</option>
-            <option value="서강대" data-logo="/static/서강대학교.png">서강대</option>
-            <option value="서울과기대" data-logo="/static/서울과학기술대학교.png">서울과기대</option>
-            <option value="서울시립대" data-logo="/static/서울시립대학교.png">서울시립대</option>
-            <option value="서울대" data-logo="/static/서울대학교.png">서울대</option>
-            <option value="성균관대" data-logo="/static/성균관대학교.png">성균관대</option>
-            <option value="세종대" data-logo="/static/세종대학교.png">세종대</option>
-            <option value="숭실대" data-logo="/static/숭실대학교.png">숭실대</option>
-            <option value="연세대" data-logo="/static/연세대학교.png">연세대</option>
-            <option value="UNIST" data-logo="/static/UNIST.png">UNIST</option>
-            <option value="이화여대" data-logo="/static/이화여자대학교.png">이화여대</option>
-            <option value="인하대" data-logo="/static/인하대학교.png">인하대</option>
-            <option value="전남대" data-logo="/static/전남대학교.png">전남대</option>
-            <option value="전북대" data-logo="/static/전북대학교.png">전북대</option>
-            <option value="제주대" data-logo="/static/제주대학교.png">제주대</option>
-            <option value="중앙대" data-logo="/static/중앙대학교.png">중앙대</option>
-            <option value="충남대" data-logo="/static/충남대학교.png">충남대</option>
-            <option value="충북대" data-logo="/static/충북대학교.png">충북대</option>
-            <option value="포항공대" data-logo="/static/포항공과대학교.png">포항공대</option>
-            <option value="KAIST" data-logo="/static/KAIST.png">KAIST</option>
-            <option value="한국외대" data-logo="/static/한국외국어대학교.png">한국외대</option>
-            <option value="한양대" data-logo="/static/한양대학교.png">한양대</option>
-            <option value="한양대 ERICA" data-logo="/static/한양대학교 ERICA.png">한양대 ERICA</option>
-            <option value="홍익대" data-logo="/static/홍익대학교.png">홍익대</option>
         </select>
 
         <div id="title-badge">🏅 칭호 없음</div>
@@ -474,6 +435,64 @@
         let clickResetTimer = null;
 
         const ALL_UNIS = ["가천대","가톨릭대","강원대","건국대","경기대","경북대","경희대","고려대","광운대","GIST","국민대","단국대","DGIST","명지대","부산대","상명대","서강대","서울과기대","서울시립대","서울대","성균관대","세종대","숭실대","연세대","UNIST","이화여대","인하대","전남대","전북대","제주대","중앙대","충남대","충북대","포항공대","KAIST","한국외대","한양대","한양대 ERICA","홍익대"];
+
+        // 로고 파일명 매핑 (기본: 대학교명 + "학교.png", 예외는 직접 지정)
+        const UNI_LOGO = {
+            "가천대": "가천대학교",
+            "가톨릭대": "가톨릭대학교",
+            "강원대": "강원대학교",
+            "건국대": "건국대학교",
+            "경기대": "경기대학교",
+            "경북대": "경북대학교",
+            "경희대": "경희대학교",
+            "고려대": "고려대학교",
+            "광운대": "광운대학교",
+            "국민대": "국민대학교",
+            "단국대": "단국대학교",
+            "명지대": "명지대학교",
+            "부산대": "부산대학교",
+            "상명대": "상명대학교",
+            "서강대": "서강대학교",
+            "서울과기대": "서울과학기술대학교",
+            "서울시립대": "서울시립대학교",
+            "서울대": "서울대학교",
+            "성균관대": "성균관대학교",
+            "세종대": "세종대학교",
+            "숭실대": "숭실대학교",
+            "연세대": "연세대학교",
+            "이화여대": "이화여자대학교",
+            "인하대": "인하대학교",
+            "전남대": "전남대학교",
+            "전북대": "전북대학교",
+            "제주대": "제주대학교",
+            "중앙대": "중앙대학교",
+            "충남대": "충남대학교",
+            "충북대": "충북대학교",
+            "포항공대": "포항공과대학교",
+            "한국외대": "한국외국어대학교",
+            "한양대": "한양대학교",
+            "한양대 ERICA": "한양대학교 ERICA",
+            "홍익대": "홍익대학교",
+            "GIST": "GIST",
+            "DGIST": "DGIST",
+            "UNIST": "UNIST",
+            "KAIST": "KAIST",
+        };
+
+        // 자동 정렬 후 select에 추가
+        (function() {
+            const korean = ALL_UNIS.filter(u => /^[가-힣]/.test(u)).sort((a, b) => a.localeCompare(b, 'ko'));
+            const english = ALL_UNIS.filter(u => /^[A-Z]/.test(u)).sort();
+            const sorted = [...korean, ...english];
+            const sel = document.getElementById("university-select");
+            sorted.forEach(u => {
+                const opt = document.createElement("option");
+                opt.value = u;
+                opt.textContent = u;
+                if (UNI_LOGO[u]) opt.setAttribute("data-logo", `/static/${UNI_LOGO[u]}.png`);
+                sel.appendChild(opt);
+            });
+        })();
 
         const ITEMS = [
             { id: "sprout", emoji: "🌱", name: "새싹의 손", grade: "일반", desc: "10터치당 +1 자동 추가", condition: "총합 10번 달성" },
