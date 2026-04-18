@@ -9,12 +9,20 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Jua', sans-serif;
-            background: linear-gradient(135deg, #a8d8f0 0%, #4a90d9 100%);
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            transition: background 0.8s ease;
+        }
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* ── 로그인/회원가입 화면 ── */
@@ -253,6 +261,8 @@
 </head>
 <body>
 
+    <canvas id="particle-canvas"></canvas>
+
     <!-- 로그인/회원가입 화면 -->
     <div id="auth-screen">
         <h1>🏫 대학 터치 배틀!</h1>
@@ -284,18 +294,22 @@
     <!-- 아이템 패널 -->
     <div id="item-panel">
         <!-- 탭 버튼 -->
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <div style="display:flex; gap:6px; margin-bottom:16px;">
             <button id="tab-item" onclick="switchTab('item')"
-                style="flex:1; padding:10px; border-radius:16px; border:2px solid #ff6b6b; background:#ff6b6b; color:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer;">
+                style="flex:1; padding:8px 4px; border-radius:16px; border:2px solid #ff6b6b; background:#ff6b6b; color:white; font-family:'Jua',sans-serif; font-size:13px; cursor:pointer;">
                 🎒 아이템
             </button>
             <button id="tab-sound" onclick="switchTab('sound')"
-                style="flex:1; padding:10px; border-radius:16px; border:2px solid #ffb3b3; background:white; color:#ff6b6b; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer;">
+                style="flex:1; padding:8px 4px; border-radius:16px; border:2px solid #ffb3b3; background:white; color:#ff6b6b; font-family:'Jua',sans-serif; font-size:13px; cursor:pointer;">
                 🎵 효과음
+            </button>
+            <button id="tab-theme" onclick="switchTab('theme')"
+                style="flex:1; padding:8px 4px; border-radius:16px; border:2px solid #ffb3b3; background:white; color:#ff6b6b; font-family:'Jua',sans-serif; font-size:13px; cursor:pointer;">
+                🎨 테마
             </button>
         </div>
 
-        <!-- 아이템 탭 내용 -->
+        <!-- 아이템 탭 -->
         <div id="panel-item-content">
             <div class="slots-area">
                 <h3>⚙️ 장착 슬롯 (최대 3개)</h3>
@@ -318,7 +332,7 @@
             <div id="panel-item-list"></div>
         </div>
 
-        <!-- 효과음 탭 내용 -->
+        <!-- 효과음 탭 -->
         <div id="panel-sound-content" style="display:none;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
                 <span onclick="toggleMute()" style="cursor:pointer; font-size:20px;">🔊</span>
@@ -330,6 +344,28 @@
             <div id="normal-sound-list" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;"></div>
             <div style="color:#ff6b6b; margin-bottom:8px;">🔥 피버 터치음</div>
             <div id="fever-sound-list" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+
+        <!-- 테마 탭 -->
+        <div id="panel-theme-content" style="display:none;">
+            <div style="color:#ff9999; font-size:13px; margin-bottom:12px; text-align:center;">접속 시기에 맞춰 자동 설정돼요!</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button onclick="setTheme('spring')" id="theme-btn-spring" style="padding:14px; border-radius:16px; border:2px solid #ffb3b3; background:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; text-align:left;">
+                    🌸 봄 — 벚꽃 흩날리기
+                </button>
+                <button onclick="setTheme('summer')" id="theme-btn-summer" style="padding:14px; border-radius:16px; border:2px solid #ffb3b3; background:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; text-align:left;">
+                    ☀️ 여름 — 풀잎 흩날리기
+                </button>
+                <button onclick="setTheme('autumn')" id="theme-btn-autumn" style="padding:14px; border-radius:16px; border:2px solid #ffb3b3; background:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; text-align:left;">
+                    🍂 가을 — 단풍잎 흩날리기
+                </button>
+                <button onclick="setTheme('winter')" id="theme-btn-winter" style="padding:14px; border-radius:16px; border:2px solid #ffb3b3; background:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; text-align:left;">
+                    ❄️ 겨울 — 눈 내리기
+                </button>
+                <button onclick="setTheme('none')" id="theme-btn-none" style="padding:14px; border-radius:16px; border:2px solid #ffb3b3; background:white; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; text-align:left;">
+                    ⬜ 기본 — 효과 없음
+                </button>
+            </div>
         </div>
     </div>
     <!-- 게임 화면 -->
@@ -577,7 +613,100 @@
         let prevVolume = 0.5;
         let selectedNormalSound = "pop";
         let selectedFeverSound = "rise";
+        let currentTheme = "none";
+        let particleAnimId = null;
 
+        // ── 테마 설정 ──
+        const THEMES = {
+            spring: { bg: "linear-gradient(135deg, #ffd6e7 0%, #ffb3c6 100%)", particle: "🌸" },
+            summer: { bg: "linear-gradient(135deg, #d4f5c0 0%, #85d96a 100%)", particle: "🌿" },
+            autumn: { bg: "linear-gradient(135deg, #ffe4b5 0%, #e8823a 100%)", particle: "🍂" },
+            winter: { bg: "linear-gradient(135deg, #e8f4fd 0%, #b8d9f0 100%)", particle: "❄️" },
+            none:   { bg: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", particle: null },
+        };
+
+        function getSeasonTheme() {
+            const month = new Date().getMonth() + 1;
+            if (month >= 3 && month <= 5) return "spring";
+            if (month >= 6 && month <= 8) return "summer";
+            if (month >= 9 && month <= 11) return "autumn";
+            return "winter";
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem("theme", theme);
+            document.body.style.background = THEMES[theme].bg;
+
+            // 파티클 초기화
+            if (particleAnimId) cancelAnimationFrame(particleAnimId);
+            const canvas = document.getElementById("particle-canvas");
+            const ctx2 = canvas.getContext("2d");
+            ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (THEMES[theme].particle) startParticles(theme);
+
+            // 테마 버튼 강조
+            ["spring","summer","autumn","winter","none"].forEach(t => {
+                const btn = document.getElementById("theme-btn-" + t);
+                if (btn) {
+                    btn.style.background = t === theme ? "#ff6b6b" : "white";
+                    btn.style.color = t === theme ? "white" : "#555";
+                    btn.style.borderColor = t === theme ? "#ff6b6b" : "#ffb3b3";
+                }
+            });
+        }
+
+        function startParticles(theme) {
+            const canvas = document.getElementById("particle-canvas");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx2 = canvas.getContext("2d");
+            const emoji = THEMES[theme].particle;
+            const particles = [];
+
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: 14 + Math.random() * 14,
+                    speed: 0.8 + Math.random() * 1.5,
+                    drift: (Math.random() - 0.5) * 1.2,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.04,
+                    opacity: 0.6 + Math.random() * 0.4,
+                });
+            }
+
+            function animate() {
+                ctx2.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx2.save();
+                    ctx2.globalAlpha = p.opacity;
+                    ctx2.font = p.size + "px serif";
+                    ctx2.translate(p.x, p.y);
+                    ctx2.rotate(p.rot);
+                    ctx2.fillText(emoji, -p.size / 2, p.size / 2);
+                    ctx2.restore();
+                    p.y += p.speed;
+                    p.x += p.drift;
+                    p.rot += p.rotSpeed;
+                    if (p.y > canvas.height + 30) {
+                        p.y = -30;
+                        p.x = Math.random() * canvas.width;
+                    }
+                });
+                particleAnimId = requestAnimationFrame(animate);
+            }
+            animate();
+
+            window.addEventListener("resize", () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // ── 효과음 ──
         const NORMAL_SOUNDS = [
             { id: "pop",   name: "🎵 팝" },
             { id: "click", name: "🎵 클릭" },
@@ -743,30 +872,15 @@
         }
 
         function switchTab(tab) {
-            const itemContent = document.getElementById("panel-item-content");
-            const soundContent = document.getElementById("panel-sound-content");
-            const tabItem = document.getElementById("tab-item");
-            const tabSound = document.getElementById("tab-sound");
-            if (tab === "item") {
-                itemContent.style.display = "block";
-                soundContent.style.display = "none";
-                tabItem.style.background = "#ff6b6b";
-                tabItem.style.color = "white";
-                tabItem.style.borderColor = "#ff6b6b";
-                tabSound.style.background = "white";
-                tabSound.style.color = "#ff6b6b";
-                tabSound.style.borderColor = "#ffb3b3";
-            } else {
-                itemContent.style.display = "none";
-                soundContent.style.display = "block";
-                tabItem.style.background = "white";
-                tabItem.style.color = "#ff6b6b";
-                tabItem.style.borderColor = "#ffb3b3";
-                tabSound.style.background = "#ff6b6b";
-                tabSound.style.color = "white";
-                tabSound.style.borderColor = "#ff6b6b";
-                renderSoundList();
-            }
+            const tabs = ["item", "sound", "theme"];
+            tabs.forEach(t => {
+                document.getElementById("panel-" + t + "-content").style.display = t === tab ? "block" : "none";
+                const btn = document.getElementById("tab-" + t);
+                btn.style.background = t === tab ? "#ff6b6b" : "white";
+                btn.style.color = t === tab ? "white" : "#ff6b6b";
+                btn.style.borderColor = t === tab ? "#ff6b6b" : "#ffb3b3";
+            });
+            if (tab === "sound") renderSoundList();
         }
         
         function doLogout() {
@@ -795,6 +909,10 @@
             const savedFever = localStorage.getItem("feverSound");
             if (savedNormal) selectedNormalSound = savedNormal;
             if (savedFever) selectedFeverSound = savedFever;
+
+            // 테마 복원 (저장된 테마 or 현재 계절)
+            const savedTheme = localStorage.getItem("theme") || getSeasonTheme();
+            setTheme(savedTheme);
             document.getElementById("auth-screen").style.display = "none";
             document.getElementById("game-screen").style.display = "flex";
             document.getElementById("menu-btn").style.display = "block";
